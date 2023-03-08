@@ -2004,3 +2004,18 @@ def trilu(data, k, upper=True):
     if not isinstance(k, Expr):
         k = const(k, dtype="int32")
     return _make.trilu(data, k, upper)
+
+def axis_abs(data, axis=0, indice=0):
+    """Computes abs of data along a certain axis indice.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The source data to be invert permuated.
+
+    Returns
+    -------
+    ret : relay.Expr
+        Invert permuated data. Has the same type as data.
+    """
+    return _make.axis_abs(data, axis, indice)

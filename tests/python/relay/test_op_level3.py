@@ -2318,6 +2318,29 @@ def test_trilu_reduce():
     np_res = np.triu(data_i0, k).argmin(axis=0)
     tvm.testing.assert_allclose(tvm_res, np_res)
 
+class TestAxisAbs:
+    dshape, axis, indice = tvm.testing.parameters(     # 定义测试用例参数，这里是输入tensor的shape，axis和indice
+        ((4, 4, 1), 1, 1),
+        ((4, 4, 1), 0, 1),
+        ((3, 3, 3), 1, 1),
+    )
+
+    def test_axis_abs(self, dshape, axis, indice):
+        x = relay.var("x", relay.TensorType(dshape, "int32"))  # 定义relay输入tensor
+        y = relay.axis_abs(x, axis=axis, indice=indice)    # 定义axis_abs运算表达式
+        yy = run_infer_type(y)      # 推理运算表达式的类型，定义在python/tvm/relay/testing/__init__.py
+        assert yy.checked_type == relay.TensorType(dshape, "int32")  # 类型测试
+
+        data = np.random.randint(-5, 5, size=dshape).astype("int32")
+        op_res = create_executor().evaluate(y, {x: relay.const(data)})  # 创建执行器并执行算子推理
+        if axis == 0:
+            data[indice,:,:] = np.abs(data[indice,:,:])
+        elif axis == 1:
+            data[:,indice, :] = np.abs(data[:,indice,:])
+        else:
+            data[:,:,indice] = np.abs(data[:,:,indice])
+        ref_res = data
+        np.testing.assert_equal(op_res.numpy(), ref_res)  # 对比numpy结果与relay的计算结果
 
 if __name__ == "__main__":
     tvm.testing.main()

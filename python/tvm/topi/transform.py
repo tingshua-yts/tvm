@@ -23,7 +23,7 @@ from tvm import topi
 from tvm.te import hybrid
 from . import cpp
 from . import tag
-from .utils import within_index, make_idx, const_vector
+from .utils import get_const_int, within_index, make_idx, const_vector
 
 
 def expand_dims(a, axis, num_newaxis=1):
@@ -1066,3 +1066,33 @@ def trilu(data, k, upper):
         return tvm.tir.Select(check_position, value, tvm.tir.const(0, data.dtype))
 
     return te.compute(data.shape, _apply_trilu, name="trilu", tag=topi.tag.ELEMWISE)
+
+def axis_abs(x, axis, indice):
+    """Take absolute value of the input of axis in x, element-wise.
+
+    Parameters
+    ----------
+    x : tvm.te.Tensor
+        Input argument.
+    axis: int
+        Input argument.
+    indice: int
+        Input argument.
+    Returns
+    -------
+    y : tvm.te.Tensor
+        The result.
+    """
+    ishape = x.shape
+    assert len(ishape) == 3
+    assert indice < get_const_int(ishape[axis])
+    assert indice >= 0
+    if axis == 0:
+        return te.compute(x.shape, lambda i,j,k: te.if_then_else(x[i,j,k] >= 0, x[i,j,k],
+                            te.if_then_else(i == indice, -x[i,j,k], x[i,j,k])))
+    elif axis == 1:
+        return te.compute(x.shape, lambda i, j, k: te.if_then_else(x[i, j, k] >= 0, x[i, j, k],
+                            te.if_then_else(j == indice, -x[i, j, k], x[i, j, k])))
+    else:
+        return te.compute(x.shape, lambda i, j, k: te.if_then_else(x[i, j, k] >= 0, x[i, j, k],
+                            te.if_then_else(k == indice, -x[i, j, k], x[i, j, k])))

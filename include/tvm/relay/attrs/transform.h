@@ -609,6 +609,18 @@ struct TriluAttrs : public tvm::AttrsNode<TriluAttrs> {
   }
 };  // struct TriluAttrs
 
+/*! \brief Attributes used in axisabs operator */
+struct AxisAbsAttrs : public tvm::AttrsNode<AxisAbsAttrs> {
+    int axis;
+    int indice;
+    //声明Attrs
+    TVM_DECLARE_ATTRS(AxisAbsAttrs, "relay.attrs.AxisAbsAttrs") {
+        // 定义field
+        TVM_ATTR_FIELD(axis).set_default(0).describe("Axis to abs");
+        TVM_ATTR_FIELD(indice).set_default(0).describe("Indice to abs");
+    }
+};
+
 }  // namespace relay
 }  // namespace tvm
 #endif  // TVM_RELAY_ATTRS_TRANSFORM_H_
